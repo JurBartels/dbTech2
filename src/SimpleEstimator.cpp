@@ -20,49 +20,28 @@ void SimpleEstimator::prepare() {
     start_end_set_counts.resize(graph->getNoLabels());
 
     // count label freq.
-    for(int i = 0; i < graph->getNoVertices(); i++) {
-        for(auto labelTarget : graph->adj[i]) {
+    for (int i = 0; i < graph->getNoVertices(); i++) {
+        for (auto labelTarget : graph->adj[i]) {
             auto label = labelTarget.first;
             label_count[label]++;
         }
     }
 
 
-
     start_end_set_counts = compute_in_end_counts();
 
-    for(auto e: start_end_set_counts){
-        std::cout << "SE: " << e.first << " " << e.second << std::endl;
-    }
-
-}
-
-
-
-int queryLength(RPQTree *q) {
-    if (q->isLeaf()) {
-        return 1;
-    }
-    else if (q->isConcat()){
-        return queryLength(q->left) + queryLength(q->right);
-    }
 }
 
 
 cardStat SimpleEstimator::estimate(RPQTree *q) {
 
-
-    // perform your estimation here
-    int length = queryLength(q);
-    if(length == 0) {
-        return cardStat{0,0,0};
-    }
-
     std::vector<std::pair<uint32_t,bool>> query_list;
     reduceQuery(q, query_list);
 
-    for(auto e : query_list){
-        std::cout << e.first << " " << e.second << std::endl;
+    // perform your estimation here
+    uint32_t length = (uint32_t)query_list.size();
+    if(length == 0) {
+        return cardStat{0,0,0};
     }
 
     bool inverse_start = query_list[0].second;
@@ -114,22 +93,36 @@ void SimpleEstimator::reduceQuery(RPQTree *q, std::vector<std::pair<uint32_t, bo
 std::vector<std::pair<uint32_t , uint32_t >> SimpleEstimator::compute_in_end_counts(){
     std::vector<std::pair<uint32_t, uint32_t >> res;
     res.resize(graph->getNoLabels());
-    std::unordered_set<uint32_t > inSet;
-    std::unordered_set<uint32_t > outSet;
+//    std::unordered_set<uint32_t > inSet;
+//    std::unordered_set<uint32_t > outSet;
+    std::unordered_set<uint32_t > cSet;
     for(uint32_t i = 0; i < graph->getNoLabels(); i++){
         for(uint32_t j = 0; j < graph->getNoVertices(); j++) {
             for (auto edge: graph->adj[j]) {
                 if (edge.first == i) {
-                    outSet.insert(edge.second);
-                    inSet.insert(j);
+//                    outSet.insert(edge.second);
+//                    inSet.insert(j);
+                    cSet.insert(edge.second);
                 }
             }
         }
-        std::cout << "I: " <<  i << std::endl;
-        res[i].first = (uint32_t)inSet.size();
-        res[i].second = (uint32_t)outSet.size();
-        inSet.clear();
-        outSet.clear();
+//        res[i].first = (uint32_t)inSet.size();
+//        inSet.clear();
+        res[i].first = (uint32_t) cSet.size();
+        cSet.clear();
+        for(uint32_t j = 0; j < graph->getNoVertices(); j++) {
+            for (auto edge: graph->adj[j]) {
+                if (edge.first == i) {
+//                    outSet.insert(edge.second);
+//                    inSet.insert(j);
+                    cSet.insert(j);
+                }
+            }
+        }
+//        res[i].second = (uint32_t)outSet.size();
+//        outSet.clear();
+        res[i].second = (uint32_t) cSet.size();
+        cSet.clear();
     }
     return res;
 }
