@@ -133,6 +133,3 @@ std::vector<std::pair<uint32_t , uint32_t >> SimpleEstimator::compute_in_end_cou
     }
     return res;
 }
-
-
-

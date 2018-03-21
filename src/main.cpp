@@ -45,17 +45,7 @@ std::vector<query> parseQueries(std::string &fileName) {
     return queries;
 }
 
-
-int main(int argc, char *argv[]) {
-
-    if(argc < 3) {
-        std::cout << "Usage: quicksilver <graphFile> <queriesFile>" << std::endl;
-        return 0;
-    }
-
-    // args
-    std::string graphFile {argv[1]};
-    std::string queriesFile {argv[2]};
+int estimatorBench(std::string &graphFile, std::string &queriesFile) {
 
     std::cout << "\n(1) Reading the graph into memory and preparing the estimator...\n" << std::endl;
 
@@ -71,18 +61,20 @@ int main(int argc, char *argv[]) {
     }
 
     auto end = std::chrono::steady_clock::now();
-    std::cout << "Time to read the graph into memory: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+    std::cout << "Time to read the graph into memory: "
+              << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
 
     // prepare the estimator
     auto est = std::make_unique<SimpleEstimator>(g);
     start = std::chrono::steady_clock::now();
     est->prepare();
     end = std::chrono::steady_clock::now();
-    std::cout << "Time to prepare the estimator: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+    std::cout << "Time to prepare the estimator: " << std::chrono::duration<double, std::milli>(end - start).count()
+              << " ms" << std::endl;
 
     std::cout << "\n(2) Running the query workload..." << std::endl;
 
-    for(auto query : parseQueries(queriesFile)) {
+    for (auto query : parseQueries(queriesFile)) {
 
         // perform estimation
         // parse the query into an AST
@@ -98,7 +90,8 @@ int main(int argc, char *argv[]) {
 
         std::cout << "\nEstimation (noOut, noPaths, noIn) : ";
         estimate.print();
-        std::cout << "Time to estimate: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+        std::cout << "Time to estimate: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms"
+                  << std::endl;
 
         // perform evaluation
         auto ev = std::make_unique<SimpleEvaluator>(g);
@@ -109,6 +102,62 @@ int main(int argc, char *argv[]) {
 
         std::cout << "Actual (noOut, noPaths, noIn) : ";
         actual.print();
+        std::cout << "Time to evaluate: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms"
+                  << std::endl;
+
+        // clean-up
+        delete (queryTree);
+
+    }
+}
+
+int evaluatorBench(std::string &graphFile, std::string &queriesFile) {
+
+    std::cout << "\n(1) Reading the graph into memory and preparing the evaluator...\n" << std::endl;
+
+    // read the graph
+    auto g = std::make_shared<SimpleGraph>();
+
+    auto start = std::chrono::steady_clock::now();
+    try {
+        g->readFromContiguousFile(graphFile);
+    } catch (std::runtime_error &e) {
+        std::cerr << e.what() << std::endl;
+        return 0;
+    }
+
+    auto end = std::chrono::steady_clock::now();
+    std::cout << "Time to read the graph into memory: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+
+    // prepare the evaluator
+    auto est = std::make_shared<SimpleEstimator>(g);
+    auto ev = std::make_unique<SimpleEvaluator>(g);
+    ev->attachEstimator(est);
+
+    start = std::chrono::steady_clock::now();
+    ev->prepare();
+    end = std::chrono::steady_clock::now();
+    std::cout << "Time to prepare the evaluator: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+
+    std::cout << "\n(2) Running the query workload..." << std::endl;
+
+    for(auto query : parseQueries(queriesFile)) {
+
+        // perform estimation
+        // parse the query into an AST
+        std::cout << "\nProcessing query: ";
+        query.print();
+        RPQTree *queryTree = RPQTree::strToTree(query.path);
+        std::cout << "Parsed query tree: ";
+        queryTree->print();
+
+        // perform the evaluation
+        start = std::chrono::steady_clock::now();
+        auto actual = ev->evaluate(queryTree);
+        end = std::chrono::steady_clock::now();
+
+        std::cout << "\nActual (noOut, noPaths, noIn) : ";
+        actual.print();
         std::cout << "Time to evaluate: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
 
         // clean-up
@@ -116,7 +165,25 @@ int main(int argc, char *argv[]) {
 
     }
 
+    return 0;
+}
 
+
+int main(int argc, char *argv[]) {
+
+    if(argc < 3) {
+        std::cout << "Usage: quicksilver <graphFile> <queriesFile>" << std::endl;
+        return 0;
+    }
+
+    // args
+    std::string graphFile {argv[1]};
+    std::string queriesFile {argv[2]};
+
+//    estimatorBench(graphFile, queriesFile);
+    evaluatorBench(graphFile, queriesFile);
+
+    return 0;
 }
 
 
