@@ -237,7 +237,55 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::evaluate_aux(RPQTree *q) {
     return nullptr;
 }
 
+std::vector<RPQTree*> SimpleEvaluator::getLeaves(RPQTree *query) {
+    if (query->isLeaf()) {
+        return {query};
+    }
+
+    std::vector<RPQTree*> result;
+    if (query->left) {
+        auto rec = getLeaves(query->left);
+        result.insert(result.end(), rec.begin(), rec.end());
+    }
+    if (query->right) {
+        auto rec = getLeaves(query->right);
+        result.insert(result.end(), rec.begin(), rec.end());
+    }
+
+    return result;
+}
+
+RPQTree* SimpleEvaluator::optimizeQuery(RPQTree *query) {
+    std::vector<RPQTree*> leaves = getLeaves(query);
+
+    while (leaves.size() > 1) {
+        uint32_t bestScore = 0;
+        RPQTree *bestTree = nullptr;
+        int index = -1;
+
+        for (int i = 0; i < leaves.size()-1; ++i) {
+            std::string data("/");
+            auto *currentTree = new RPQTree(data, leaves[i], leaves[i+1]);
+            uint32_t currentScore = est->estimate(currentTree).noPaths;
+
+            if (bestScore == 0 || bestScore > currentScore) {
+                bestScore = currentScore;
+                bestTree = currentTree;
+                index = i;
+            }
+        }
+
+        leaves.erase(leaves.begin() + index + 1);
+        leaves[index] = bestTree;
+    }
+
+    return leaves[0];
+}
+
 cardStat SimpleEvaluator::evaluate(RPQTree *query) {
-    auto res = evaluate_aux(query);
+    RPQTree* optimized = optimizeQuery(query);
+    //optimized->print();
+
+    auto res = evaluate_aux(optimized);
     return SimpleEvaluator::computeStats(res);
 }

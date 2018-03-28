@@ -47,6 +47,9 @@ public:
     void prepare() override ;
     cardStat evaluate(RPQTree *query) override ;
 
+    std::vector<RPQTree*> getLeaves(RPQTree *query);
+    RPQTree* optimizeQuery(RPQTree *query);
+
     void attachEstimator(std::shared_ptr<SimpleEstimator> &e);
 
     std::shared_ptr<SimpleGraph> evaluate_aux(RPQTree *q);
