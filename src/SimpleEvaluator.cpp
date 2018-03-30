@@ -5,6 +5,8 @@
 #include "SimpleEstimator.h"
 #include "SimpleEvaluator.h"
 
+using namespace std;
+
 SimpleEvaluator::SimpleEvaluator(std::shared_ptr<SimpleGraph> &g) {
 
     // works only with SimpleGraph
@@ -282,10 +284,63 @@ RPQTree* SimpleEvaluator::optimizeQuery(RPQTree *query) {
     return leaves[0];
 }
 
-cardStat SimpleEvaluator::evaluate(RPQTree *query) {
-    RPQTree* optimized = optimizeQuery(query);
-    //optimized->print();
+std::vector<std::string> SimpleEvaluator::treeToString(RPQTree *q) {
+    std::vector<std::string> vec;
+    SimpleEvaluator::treeToString(q, vec);
+    return vec;
+}
 
-    auto res = evaluate_aux(optimized);
-    return SimpleEvaluator::computeStats(res);
+void SimpleEvaluator::treeToString(RPQTree *q, std::vector<std::string> &vec) {
+    if (q->isLeaf()) {
+        vec.push_back(q->data);
+    } else {
+        SimpleEvaluator::treeToString(q->left, vec);
+        SimpleEvaluator::treeToString(q->right, vec);
+    }
+}
+
+cardStat SimpleEvaluator::evaluate(RPQTree *query) {
+    vector <string> paths;
+    vector <shared_ptr<SimpleGraph>> projections;
+    shared_ptr<SimpleGraph> result = nullptr;
+
+    // Initalize a vector with the labels
+    paths = SimpleEvaluator::treeToString(query);
+
+    // Project all the labels
+    for (int i=0; i < paths.size(); i++) {
+        uint32_t label = (uint32_t) std::stoul(paths[i].substr(0, 1));
+        bool inverse = paths[i].at(1) == '-';
+        projections.push_back(project(label, inverse, graph));
+    }
+
+    while (paths.size() > 1) {
+
+        // Find the cheapest join
+        vector <int> estimate;
+        for (int i=0; i < paths.size()-1; i++) {
+            string path = paths[i] + "/" + paths[i+1];
+            auto ea = est->estimate(RPQTree::strToTree(path));
+            estimate.push_back(ea.noPaths);
+        }
+
+        int minPos = 0;
+        for (unsigned i = 0; i < estimate.size(); ++i )
+        {
+            if (estimate[i] < estimate[minPos]) {
+                minPos = i;
+            }
+        }
+
+        auto merged_leafs = join(projections[minPos], projections[minPos+1]);
+        paths.insert(paths.begin() + minPos, paths[minPos] + "/" + paths[minPos+1]);
+        paths.erase(paths.begin() + minPos + 1);
+        paths.erase(paths.begin() + minPos + 1);
+        projections.insert(projections.begin() + minPos, merged_leafs);
+        projections.erase(projections.begin() + minPos + 1);
+        projections.erase(projections.begin() + minPos + 1);
+
+    }
+    return computeStats(projections[0]);
+
 }
