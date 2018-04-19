@@ -15,7 +15,7 @@ uint32_t SimpleGraph::getNoVertices() const {
 void SimpleGraph::setNoVertices(uint32_t n) {
     V = n;
     adj.resize(V);
-    reverse_adj.resize(V);
+
 }
 
 uint32_t SimpleGraph::getNoEdges() const {
@@ -71,7 +71,7 @@ void SimpleGraph::addEdge(uint32_t from, uint32_t to, uint32_t edgeLabel) {
                                          "(" + std::to_string(from) + "," + std::to_string(to) + "," +
                                          std::to_string(edgeLabel) + ")");
     adj[from].emplace_back(std::make_pair(edgeLabel, to));
-    reverse_adj[to].emplace_back(std::make_pair(edgeLabel, from));
+    //reverse_adj[to].emplace_back(std::make_pair(edgeLabel, from));
 }
 
 void SimpleGraph::readFromContiguousFile(const std::string &fileName) {

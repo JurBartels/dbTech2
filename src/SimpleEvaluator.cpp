@@ -76,11 +76,16 @@ cardStat SimpleEvaluator::computeStats(std::shared_ptr<SimpleGraph> &g) {
 
     cardStat stats {};
 
-    for(int source = 0; source < g->getNoVertices(); source++) {
-        if(!g->adj[source].empty()) stats.noOut++;
-    }
+    // Both of these dont seem to be checked so why bother
+
+//    for(int source = 0; source < g->getNoVertices(); source++) {
+//        if(!g->adj[source].empty()) stats.noOut++;
+//    }
 
     stats.noPaths = g->getNoDistinctEdges();
+
+
+    // This is the only use of reverse_adj, so we can get rid of it
 
 //    for(int target = 0; target < g->getNoVertices(); target++) {
 //        if(!g->reverse_adj[target].empty()) stats.noIn++;
@@ -89,39 +94,39 @@ cardStat SimpleEvaluator::computeStats(std::shared_ptr<SimpleGraph> &g) {
     return stats;
 }
 
-std::shared_ptr<SimpleGraph> SimpleEvaluator::project(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in) {
-
-    auto out = std::make_shared<SimpleGraph>(in->getNoVertices());
-    out->setNoLabels(in->getNoLabels());
-
-    if(!inverse) {
-        // going forward
-        for(uint32_t source = 0; source < in->getNoVertices(); source++) {
-            for (auto labelTarget : in->adj[source]) {
-
-                auto label = labelTarget.first;
-                auto target = labelTarget.second;
-
-                if (label == projectLabel)
-                    out->addEdge(source, target, label);
-            }
-        }
-    } else {
-        // going backward
-        for(uint32_t source = 0; source < in->getNoVertices(); source++) {
-            for (auto labelTarget : in->reverse_adj[source]) {
-
-                auto label = labelTarget.first;
-                auto target = labelTarget.second;
-
-                if (label == projectLabel)
-                    out->addEdge(source, target, label);
-            }
-        }
-    }
-
-    return out;
-}
+//std::shared_ptr<SimpleGraph> SimpleEvaluator::project(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in) {
+//
+//    auto out = std::make_shared<SimpleGraph>(in->getNoVertices());
+//    out->setNoLabels(in->getNoLabels());
+//
+//    if(!inverse) {
+//        // going forward
+//        for(uint32_t source = 0; source < in->getNoVertices(); source++) {
+//            for (auto labelTarget : in->adj[source]) {
+//
+//                auto label = labelTarget.first;
+//                auto target = labelTarget.second;
+//
+//                if (label == projectLabel)
+//                    out->addEdge(source, target, label);
+//            }
+//        }
+//    } else {
+//        // going backward
+//        for(uint32_t source = 0; source < in->getNoVertices(); source++) {
+//            for (auto labelTarget : in->reverse_adj[source]) {
+//
+//                auto label = labelTarget.first;
+//                auto target = labelTarget.second;
+//
+//                if (label == projectLabel)
+//                    out->addEdge(source, target, label);
+//            }
+//        }
+//    }
+//
+//    return out;
+//}
 
 std::shared_ptr<SimpleGraph> SimpleEvaluator::project_exh_index(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in) {
     auto out = std::make_shared<SimpleGraph>(in->getNoVertices());
