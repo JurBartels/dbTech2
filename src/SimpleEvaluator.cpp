@@ -327,6 +327,22 @@ RPQTree* SimpleEvaluator::optimizeQuery(RPQTree *query) {
 //
 //    return nullptr;
 //}
+
+std::vector<std::string> SimpleEvaluator::treeToString(RPQTree *q) {
+    std::vector<std::string> vec;
+    SimpleEvaluator::treeToString(q, vec);
+    return vec;
+}
+
+void SimpleEvaluator::treeToString(RPQTree *q, std::vector<std::string> &vec) {
+    if (q->isLeaf()) {
+        vec.push_back(q->data);
+    } else {
+        SimpleEvaluator::treeToString(q->left, vec);
+        SimpleEvaluator::treeToString(q->right, vec);
+    }
+}
+
 cardStat SimpleEvaluator::evaluate(RPQTree *query) {
 
     vector <string> paths;
