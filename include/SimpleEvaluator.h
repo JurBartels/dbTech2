@@ -36,6 +36,7 @@ class SimpleEvaluator : public Evaluator {
     std::shared_ptr<SimpleGraph> graph;
     std::shared_ptr<SimpleEstimator> est;
     std::map<std::vector<std::string>, cardStat> cache;
+    std::map<std::string, cardStat> estcache;
     aggregateIndexes agg_indexes;
     exhaustiveIndexes exh_indexes;
 

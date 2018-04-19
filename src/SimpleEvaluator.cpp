@@ -13,6 +13,7 @@ SimpleEvaluator::SimpleEvaluator(std::shared_ptr<SimpleGraph> &g) {
     graph = g;
     est = nullptr; // estimator not attached by default
     cache;
+    estcache;
 }
 
 void SimpleEvaluator::attachEstimator(std::shared_ptr<SimpleEstimator> &e) {
@@ -376,7 +377,13 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
         vector <int> estimate;
         for (int i=0; i < paths.size()-1; i++) {
             string path = paths[i] + "/" + paths[i+1];
-            auto ea = est->estimate(RPQTree::strToTree(path));
+            cardStat ea;
+            if (estcache.find(path) != estcache.end()) {
+                ea = estcache.find(path)->second;
+            } else {
+                ea = est->estimate(RPQTree::strToTree(path));
+                estcache.insert(std::pair<std::string, cardStat>(path, ea));
+            }
             estimate.push_back(ea.noPaths);
         }
 
