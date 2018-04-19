@@ -41,9 +41,6 @@ class SimpleEvaluator : public Evaluator {
 
 public:
 
-    std::vector<std::string> treeToString(RPQTree *q);
-    void treeToString(RPQTree *q, std::vector<std::string> &vec);
-
     explicit SimpleEvaluator(std::shared_ptr<SimpleGraph> &g);
     SimpleEvaluator() = default;
 

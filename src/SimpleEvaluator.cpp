@@ -195,49 +195,49 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::join(std::shared_ptr<SimpleGraph> 
     return out;
 }
 
-std::shared_ptr<SimpleGraph> SimpleEvaluator::evaluate_aux(RPQTree *q) {
-
-    // evaluate according to the AST bottom-up
-
-    if(q->isLeaf()) {
-        // project out the label in the AST
-        std::regex directLabel (R"((\d+)\+)");
-        std::regex inverseLabel (R"((\d+)\-)");
-
-        std::smatch matches;
-
-        uint32_t label;
-        bool inverse;
-
-        if(std::regex_search(q->data, matches, directLabel)) {
-            label = (uint32_t) std::stoul(matches[1]);
-            inverse = false;
-        } else if(std::regex_search(q->data, matches, inverseLabel)) {
-            label = (uint32_t) std::stoul(matches[1]);
-            inverse = true;
-        } else {
-            std::cerr << "Label parsing failed!" << std::endl;
-            return nullptr;
-        }
-
-        //return SimpleEvaluator::project(label, inverse, graph);
-        //return SimpleEvaluator::project_agg_index(label, inverse, graph);
-        return SimpleEvaluator::project_exh_index(label, inverse, graph);
-    }
-
-    if(q->isConcat()) {
-
-        // evaluate the children
-        auto leftGraph = SimpleEvaluator::evaluate_aux(q->left);
-        auto rightGraph = SimpleEvaluator::evaluate_aux(q->right);
-
-        // join left with right
-        return SimpleEvaluator::join(leftGraph, rightGraph);
-
-    }
-
-    return nullptr;
-}
+//std::shared_ptr<SimpleGraph> SimpleEvaluator::evaluate_aux(RPQTree *q) {
+//
+//    // evaluate according to the AST bottom-up
+//
+//    if(q->isLeaf()) {
+//        // project out the label in the AST
+//        std::regex directLabel (R"((\d+)\+)");
+//        std::regex inverseLabel (R"((\d+)\-)");
+//
+//        std::smatch matches;
+//
+//        uint32_t label;
+//        bool inverse;
+//
+//        if(std::regex_search(q->data, matches, directLabel)) {
+//            label = (uint32_t) std::stoul(matches[1]);
+//            inverse = false;
+//        } else if(std::regex_search(q->data, matches, inverseLabel)) {
+//            label = (uint32_t) std::stoul(matches[1]);
+//            inverse = true;
+//        } else {
+//            std::cerr << "Label parsing failed!" << std::endl;
+//            return nullptr;
+//        }
+//
+//        //return SimpleEvaluator::project(label, inverse, graph);
+//        //return SimpleEvaluator::project_agg_index(label, inverse, graph);
+//        return SimpleEvaluator::project_exh_index(label, inverse, graph);
+//    }
+//
+//    if(q->isConcat()) {
+//
+//        // evaluate the children
+//        auto leftGraph = SimpleEvaluator::evaluate_aux(q->left);
+//        auto rightGraph = SimpleEvaluator::evaluate_aux(q->right);
+//
+//        // join left with right
+//        return SimpleEvaluator::join(leftGraph, rightGraph);
+//
+//    }
+//
+//    return nullptr;
+//}
 
 std::vector<RPQTree*> SimpleEvaluator::getLeaves(RPQTree *query) {
     if (query->isLeaf()) {
@@ -284,22 +284,51 @@ RPQTree* SimpleEvaluator::optimizeQuery(RPQTree *query) {
     return leaves[0];
 }
 
-std::vector<std::string> SimpleEvaluator::treeToString(RPQTree *q) {
-    std::vector<std::string> vec;
-    SimpleEvaluator::treeToString(q, vec);
-    return vec;
-}
-
-void SimpleEvaluator::treeToString(RPQTree *q, std::vector<std::string> &vec) {
-    if (q->isLeaf()) {
-        vec.push_back(q->data);
-    } else {
-        SimpleEvaluator::treeToString(q->left, vec);
-        SimpleEvaluator::treeToString(q->right, vec);
-    }
-}
-
+//cardStatstd::shared_ptr<SimpleGraph> SimpleEvaluator::evaluate_aux(RPQTree *q) {
+//
+//    // evaluate according to the AST bottom-up
+//
+//    if(q->isLeaf()) {
+//        // project out the label in the AST
+//        std::regex directLabel (R"((\d+)\+)");
+//        std::regex inverseLabel (R"((\d+)\-)");
+//
+//        std::smatch matches;
+//
+//        uint32_t label;
+//        bool inverse;
+//
+//        if(std::regex_search(q->data, matches, directLabel)) {
+//            label = (uint32_t) std::stoul(matches[1]);
+//            inverse = false;
+//        } else if(std::regex_search(q->data, matches, inverseLabel)) {
+//            label = (uint32_t) std::stoul(matches[1]);
+//            inverse = true;
+//        } else {
+//            std::cerr << "Label parsing failed!" << std::endl;
+//            return nullptr;
+//        }
+//
+//        //return SimpleEvaluator::project(label, inverse, graph);
+//        //return SimpleEvaluator::project_agg_index(label, inverse, graph);
+//        return SimpleEvaluator::project_exh_index(label, inverse, graph);
+//    }
+//
+//    if(q->isConcat()) {
+//
+//        // evaluate the children
+//        auto leftGraph = SimpleEvaluator::evaluate_aux(q->left);
+//        auto rightGraph = SimpleEvaluator::evaluate_aux(q->right);
+//
+//        // join left with right
+//        return SimpleEvaluator::join(leftGraph, rightGraph);
+//
+//    }
+//
+//    return nullptr;
+//}
 cardStat SimpleEvaluator::evaluate(RPQTree *query) {
+
     vector <string> paths;
     vector <shared_ptr<SimpleGraph>> projections;
     shared_ptr<SimpleGraph> result = nullptr;
