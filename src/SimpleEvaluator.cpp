@@ -371,15 +371,17 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
         projections.push_back(project_exh_index(label, inverse, graph));
     }
 
-    while (paths.size() > 1) {
+    while (paths.size() > 2) {
 
         // Find the cheapest join
         vector <int> estimate;
         for (int i=0; i < paths.size()-1; i++) {
             string path = paths[i] + "/" + paths[i+1];
             cardStat ea;
+            cout << path << " ";
             if (estcache.find(path) != estcache.end()) {
                 ea = estcache.find(path)->second;
+                cout << ea.noPaths << endl;
             } else {
                 ea = est->estimate(RPQTree::strToTree(path));
                 estcache.insert(std::pair<std::string, cardStat>(path, ea));
@@ -404,7 +406,8 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
         projections.erase(projections.begin() + minPos + 1);
 
     }
-    cardStat eval = computeStats(projections[0]);
+    auto last = join(projections[0], projections[1]);
+    cardStat eval = computeStats(last);
     cache.insert(std::pair<std::vector<std::string>, cardStat>(key, eval));
     return eval;
 
