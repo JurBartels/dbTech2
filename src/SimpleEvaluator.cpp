@@ -12,6 +12,7 @@ SimpleEvaluator::SimpleEvaluator(std::shared_ptr<SimpleGraph> &g) {
     // works only with SimpleGraph
     graph = g;
     est = nullptr; // estimator not attached by default
+    cache;
 }
 
 void SimpleEvaluator::attachEstimator(std::shared_ptr<SimpleEstimator> &e) {
@@ -352,9 +353,10 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
     cout << endl;
     // Initalize a vector with the labels
     paths = SimpleEvaluator::treeToString(query);
-
-
-
+    if (cache.find(paths) != cache.end()) {
+        return cache.find(paths)->second;
+    }
+    
 //    for (int i=0; i < paths.size(); i++) {
 //        cout << paths[i] << " | ";
 //    }
