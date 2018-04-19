@@ -378,14 +378,14 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
         for (int i=0; i < paths.size()-1; i++) {
             string path = paths[i] + "/" + paths[i+1];
             cardStat ea;
-            cout << path << " ";
-            if (estcache.find(path) != estcache.end()) {
-                ea = estcache.find(path)->second;
-                cout << ea.noPaths << endl;
-            } else {
-                ea = est->estimate(RPQTree::strToTree(path));
-                estcache.insert(std::pair<std::string, cardStat>(path, ea));
-            }
+//            cout << path << " ";
+//            if (estcache.find(path) != estcache.end()) {
+//                ea = estcache.find(path)->second;
+//                cout << ea.noPaths << endl;
+//            } else {
+            ea = est->estimate(RPQTree::strToTree(path));
+//                estcache.insert(std::pair<std::string, cardStat>(path, ea));
+//            }
             estimate.push_back(ea.noPaths);
         }
 
