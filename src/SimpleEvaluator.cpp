@@ -353,10 +353,11 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
     cout << endl;
     // Initalize a vector with the labels
     paths = SimpleEvaluator::treeToString(query);
-    if (cache.find(paths) != cache.end()) {
-        return cache.find(paths)->second;
+    vector <string> key = paths;
+    if (cache.find(key) != cache.end()) {
+        return cache.find(key)->second;
     }
-    
+
 //    for (int i=0; i < paths.size(); i++) {
 //        cout << paths[i] << " | ";
 //    }
@@ -396,6 +397,8 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
         projections.erase(projections.begin() + minPos + 1);
 
     }
-    return computeStats(projections[0]);
+    cardStat eval = computeStats(projections[0]);
+    cache.insert(std::pair<std::vector<std::string>, cardStat>(key, eval));
+    return eval;
 
 }
