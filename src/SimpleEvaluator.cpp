@@ -304,12 +304,17 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
     vector <shared_ptr<SimpleGraph>> projections;
     shared_ptr<SimpleGraph> result = nullptr;
 
+    cout << endl;
     // Initalize a vector with the labels
     paths = SimpleEvaluator::treeToString(query);
+//    for (int i=0; i < paths.size(); i++) {
+//        cout << paths[i] << " | ";
+//    }
+//    cout << endl;
 
     // Project all the labels
     for (int i=0; i < paths.size(); i++) {
-        uint32_t label = (uint32_t) std::stoul(paths[i].substr(0, 1));
+        uint32_t label = (uint32_t) std::stoul(paths[i].substr(0, paths[i].length()-1));
         bool inverse = paths[i].at(1) == '-';
         projections.push_back(project(label, inverse, graph));
     }
