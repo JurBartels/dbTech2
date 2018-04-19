@@ -352,6 +352,8 @@ void SimpleEvaluator::treeToString(RPQTree *q, std::vector<std::string> &vec) {
 
 cardStat SimpleEvaluator::evaluate(RPQTree *query) {
 
+    query = optimizeQuery(query);
+
     vector <string> paths;
     vector <shared_ptr<SimpleGraph>> projections;
     shared_ptr<SimpleGraph> result = nullptr;
