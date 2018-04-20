@@ -34,22 +34,12 @@ SimpleEvaluator.h</FONT>
 </span><span class="s2">#include </span><span class="s3">&quot;Evaluator.h&quot;</span><span class="s1"> 
 </span><span class="s2">#include </span><span class="s3">&quot;Graph.h&quot;</span><span class="s1"> 
  
-</span><span class="s4">struct </span><span class="s1">aggregateIndexes { 
-    </span><span class="s0">// aggregate indexes: SP, SO, PS, PO, OS, OP, S, P, and O</span><span class="s1"> 
-    std::vector&lt;std::vector&lt;</span><span class="s4">int</span><span class="s1">&gt;&gt; SP</span><span class="s5">;</span><span class="s1"> 
-    std::vector&lt;std::vector&lt;</span><span class="s4">int</span><span class="s1">&gt;&gt; SO</span><span class="s5">;</span><span class="s1"> 
-    std::vector&lt;std::vector&lt;</span><span class="s4">int</span><span class="s1">&gt;&gt; PS</span><span class="s5">;</span><span class="s1"> 
-    std::vector&lt;std::vector&lt;</span><span class="s4">int</span><span class="s1">&gt;&gt; PO</span><span class="s5">;</span><span class="s1"> 
-    std::vector&lt;std::vector&lt;</span><span class="s4">int</span><span class="s1">&gt;&gt; OS</span><span class="s5">;</span><span class="s1"> 
-    std::vector&lt;std::vector&lt;</span><span class="s4">int</span><span class="s1">&gt;&gt; OP</span><span class="s5">;</span><span class="s1"> 
-}</span><span class="s5">;</span><span class="s1"> 
- 
 </span><span class="s4">struct </span><span class="s1">exhaustiveIndexes { 
     </span><span class="s0">// exhaustive indexes: SOP, PSO, POS, OSP</span><span class="s1"> 
-    std::vector&lt;std::vector&lt;std::pair&lt;uint32_t</span><span class="s5">,</span><span class="s1">uint32_t&gt;&gt;&gt; SOP</span><span class="s5">;</span><span class="s1"> 
+</span><span class="s0">//    std::vector&lt;std::vector&lt;std::pair&lt;uint32_t,uint32_t&gt;&gt;&gt; SOP;</span><span class="s1"> 
     std::vector&lt;std::vector&lt;std::pair&lt;uint32_t</span><span class="s5">,</span><span class="s1">uint32_t&gt;&gt;&gt; PSO</span><span class="s5">;</span><span class="s1"> 
     std::vector&lt;std::vector&lt;std::pair&lt;uint32_t</span><span class="s5">,</span><span class="s1">uint32_t&gt;&gt;&gt; POS</span><span class="s5">;</span><span class="s1"> 
-    std::vector&lt;std::vector&lt;std::pair&lt;uint32_t</span><span class="s5">,</span><span class="s1">uint32_t&gt;&gt;&gt; OSP</span><span class="s5">;</span><span class="s1"> 
+</span><span class="s0">//    std::vector&lt;std::vector&lt;std::pair&lt;uint32_t,uint32_t&gt;&gt;&gt; OSP;</span><span class="s1"> 
 }</span><span class="s5">;</span><span class="s1"> 
  
 </span><span class="s4">class </span><span class="s1">SimpleEvaluator : </span><span class="s4">public </span><span class="s1">Evaluator { 
@@ -58,7 +48,6 @@ SimpleEvaluator.h</FONT>
     std::shared_ptr&lt;SimpleEstimator&gt; est</span><span class="s5">;</span><span class="s1"> 
     std::map&lt;std::vector&lt;std::string&gt;</span><span class="s5">, </span><span class="s1">cardStat&gt; cache</span><span class="s5">;</span><span class="s1"> 
     std::map&lt;std::string</span><span class="s5">, </span><span class="s1">cardStat&gt; estcache</span><span class="s5">;</span><span class="s1"> 
-    aggregateIndexes agg_indexes</span><span class="s5">;</span><span class="s1"> 
     exhaustiveIndexes exh_indexes</span><span class="s5">;</span><span class="s1"> 
  
 </span><span class="s4">public</span><span class="s1">: 
