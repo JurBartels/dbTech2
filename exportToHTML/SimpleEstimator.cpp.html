@@ -1,0 +1,153 @@
+<html>
+<head>
+<title>SimpleEstimator.cpp</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #606366; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(128,128,128); }
+.s1 { color: rgb(169,183,198); }
+.s2 { color: rgb(187,181,41); }
+.s3 { color: rgb(106,135,89); }
+.s4 { color: rgb(204,120,50); }
+.s5 { color: rgb(204,120,50); font-weight: bold; }
+.s6 { color: rgb(104,151,187); }
+</style>
+</head>
+<BODY BGCOLOR="#2b2b2b">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+SimpleEstimator.cpp</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0">//</span><span class="s1"> 
+</span><span class="s0">// Created by Nikolay Yakovets on 2018-02-01.</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+ 
+</span><span class="s2">#include </span><span class="s3">&quot;SimpleGraph.h&quot;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&quot;SimpleEstimator.h&quot;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&lt;list&gt;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&lt;cmath&gt;</span><span class="s1"> 
+ 
+ 
+SimpleEstimator::SimpleEstimator(std::shared_ptr&lt;SimpleGraph&gt; &amp;g){ 
+    graph = g</span><span class="s4">;</span><span class="s1"> 
+} 
+ 
+ 
+ 
+</span><span class="s5">void </span><span class="s1">SimpleEstimator::prepare() { 
+ 
+    label_count.resize(graph-&gt;getNoLabels())</span><span class="s4">;</span><span class="s1"> 
+    start_end_set_counts.resize(graph-&gt;getNoLabels())</span><span class="s4">;</span><span class="s1"> 
+ 
+    </span><span class="s0">// count label freq.</span><span class="s1"> 
+    </span><span class="s5">for </span><span class="s1">(</span><span class="s5">int </span><span class="s1">i = </span><span class="s6">0</span><span class="s4">; </span><span class="s1">i &lt; graph-&gt;getNoVertices()</span><span class="s4">; </span><span class="s1">i++) { 
+        </span><span class="s5">for </span><span class="s1">(</span><span class="s5">auto </span><span class="s1">labelTarget : graph-&gt;adj[i]) { 
+            </span><span class="s5">auto </span><span class="s1">label = labelTarget.first</span><span class="s4">;</span><span class="s1"> 
+            label_count[label]++</span><span class="s4">;</span><span class="s1"> 
+        } 
+    } 
+ 
+ 
+    start_end_set_counts = compute_in_end_counts()</span><span class="s4">;</span><span class="s1"> 
+ 
+} 
+ 
+ 
+cardStat SimpleEstimator::estimate(RPQTree *q) { 
+ 
+    std::vector&lt;std::pair&lt;uint32_t</span><span class="s4">,</span><span class="s5">bool</span><span class="s1">&gt;&gt; query_list</span><span class="s4">;</span><span class="s1"> 
+    reduceQuery(q</span><span class="s4">, </span><span class="s1">query_list)</span><span class="s4">;</span><span class="s1"> 
+ 
+    </span><span class="s0">// perform your estimation here</span><span class="s1"> 
+    uint32_t length = (uint32_t)query_list.size()</span><span class="s4">;</span><span class="s1"> 
+    </span><span class="s5">if</span><span class="s1">(length == </span><span class="s6">0</span><span class="s1">) { 
+        </span><span class="s5">return </span><span class="s1">cardStat{</span><span class="s6">0</span><span class="s4">,</span><span class="s6">0</span><span class="s4">,</span><span class="s6">0</span><span class="s1">}</span><span class="s4">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s5">bool </span><span class="s1">inverse_start = query_list[</span><span class="s6">0</span><span class="s1">].second</span><span class="s4">;</span><span class="s1"> 
+    uint32_t label_start = query_list[</span><span class="s6">0</span><span class="s1">].first</span><span class="s4">;</span><span class="s1"> 
+ 
+    </span><span class="s5">double </span><span class="s1">Vry</span><span class="s4">;</span><span class="s1"> 
+    </span><span class="s5">if</span><span class="s1">(!inverse_start) { 
+        Vry = start_end_set_counts[label_start].second</span><span class="s4">;</span><span class="s1"> 
+    } </span><span class="s5">else </span><span class="s1">{ 
+        Vry = start_end_set_counts[label_start].first</span><span class="s4">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s5">double </span><span class="s1">Tr = label_count[label_start]</span><span class="s4">;</span><span class="s1"> 
+ 
+    </span><span class="s5">if</span><span class="s1">(length == </span><span class="s6">1</span><span class="s1">) { 
+        </span><span class="s5">return </span><span class="s1">cardStat{</span><span class="s6">0</span><span class="s4">, </span><span class="s1">(uint32_t) label_count[label_start]</span><span class="s4">,</span><span class="s6">0</span><span class="s1">}</span><span class="s4">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s5">for</span><span class="s1">(</span><span class="s5">int </span><span class="s1">i = </span><span class="s6">1</span><span class="s4">; </span><span class="s1">i &lt; length</span><span class="s4">; </span><span class="s1">i++) { 
+        </span><span class="s5">double </span><span class="s1">Vsy</span><span class="s4">;</span><span class="s1"> 
+        </span><span class="s5">double </span><span class="s1">Ts = label_count[query_list[i].first]</span><span class="s4">;</span><span class="s1"> 
+        </span><span class="s5">if</span><span class="s1">(query_list[i].second) { 
+            Vsy = start_end_set_counts[query_list[i].first].second</span><span class="s4">;</span><span class="s1"> 
+        } </span><span class="s5">else </span><span class="s1">{ 
+            Vsy = start_end_set_counts[query_list[i].first].first</span><span class="s4">;</span><span class="s1"> 
+        } 
+        </span><span class="s5">double </span><span class="s1">join_size = std::min(Tr*(Ts/Vsy)</span><span class="s4">,</span><span class="s1">Ts*(Tr/Vry))</span><span class="s4">;</span><span class="s1"> 
+        </span><span class="s5">if</span><span class="s1">(query_list[i].second) { 
+            Vry = start_end_set_counts[query_list[i].first].first</span><span class="s4">;</span><span class="s1"> 
+        } </span><span class="s5">else </span><span class="s1">{ 
+            Vry = start_end_set_counts[query_list[i].first].second</span><span class="s4">;</span><span class="s1"> 
+        } 
+        Vry = std::min(Vry</span><span class="s4">,</span><span class="s1">join_size)</span><span class="s4">;</span><span class="s1"> 
+        Tr = join_size</span><span class="s4">;</span><span class="s1"> 
+    } 
+    </span><span class="s5">return </span><span class="s1">cardStat{ </span><span class="s6">0</span><span class="s4">, </span><span class="s1">(uint32_t) Tr</span><span class="s4">, </span><span class="s6">0</span><span class="s1">}</span><span class="s4">;</span><span class="s1"> 
+} 
+ 
+</span><span class="s5">void </span><span class="s1">SimpleEstimator::reduceQuery(RPQTree *q</span><span class="s4">, </span><span class="s1">std::vector&lt;std::pair&lt;uint32_t</span><span class="s4">, </span><span class="s5">bool</span><span class="s1">&gt;&gt; &amp;parsedQuery) { 
+    </span><span class="s5">if </span><span class="s1">(q-&gt;isLeaf()) { 
+        parsedQuery.emplace_back(std::make_pair((uint32_t) std::stol(q-&gt;data.substr(</span><span class="s6">0</span><span class="s4">, </span><span class="s1">q-&gt;data.size()-</span><span class="s6">1</span><span class="s1">))</span><span class="s4">,</span><span class="s1">q-&gt;data.substr(q-&gt;data.size()-</span><span class="s6">1</span><span class="s4">, </span><span class="s1">q-&gt;data.size()) == </span><span class="s3">&quot;-&quot;</span><span class="s1">))</span><span class="s4">;</span><span class="s1"> 
+    } 
+    </span><span class="s5">else if </span><span class="s1">(q-&gt;isConcat()){ 
+        reduceQuery(q-&gt;left</span><span class="s4">, </span><span class="s1">parsedQuery)</span><span class="s4">;</span><span class="s1"> 
+        reduceQuery(q-&gt;right</span><span class="s4">, </span><span class="s1">parsedQuery)</span><span class="s4">;</span><span class="s1"> 
+    } 
+} 
+ 
+std::vector&lt;std::pair&lt;uint32_t </span><span class="s4">, </span><span class="s1">uint32_t &gt;&gt; SimpleEstimator::compute_in_end_counts(){ 
+    std::vector&lt;std::pair&lt;uint32_t</span><span class="s4">, </span><span class="s1">uint32_t &gt;&gt; res</span><span class="s4">;</span><span class="s1"> 
+    res.resize(graph-&gt;getNoLabels())</span><span class="s4">;</span><span class="s1"> 
+</span><span class="s0">//    std::unordered_set&lt;uint32_t &gt; inSet;</span><span class="s1"> 
+</span><span class="s0">//    std::unordered_set&lt;uint32_t &gt; outSet;</span><span class="s1"> 
+    std::unordered_set&lt;uint32_t &gt; cSet</span><span class="s4">;</span><span class="s1"> 
+    </span><span class="s5">for</span><span class="s1">(uint32_t i = </span><span class="s6">0</span><span class="s4">; </span><span class="s1">i &lt; graph-&gt;getNoLabels()</span><span class="s4">; </span><span class="s1">i++){ 
+        </span><span class="s5">for</span><span class="s1">(uint32_t j = </span><span class="s6">0</span><span class="s4">; </span><span class="s1">j &lt; graph-&gt;getNoVertices()</span><span class="s4">; </span><span class="s1">j++) { 
+            </span><span class="s5">for </span><span class="s1">(</span><span class="s5">auto </span><span class="s1">edge: graph-&gt;adj[j]) { 
+                </span><span class="s5">if </span><span class="s1">(edge.first == i) { 
+</span><span class="s0">//                    outSet.insert(edge.second);</span><span class="s1"> 
+</span><span class="s0">//                    inSet.insert(j);</span><span class="s1"> 
+                    cSet.insert(edge.second)</span><span class="s4">;</span><span class="s1"> 
+                } 
+            } 
+        } 
+</span><span class="s0">//        res[i].first = (uint32_t)inSet.size();</span><span class="s1"> 
+</span><span class="s0">//        inSet.clear();</span><span class="s1"> 
+        res[i].first = (uint32_t) cSet.size()</span><span class="s4">;</span><span class="s1"> 
+        cSet.clear()</span><span class="s4">;</span><span class="s1"> 
+        </span><span class="s5">for</span><span class="s1">(uint32_t j = </span><span class="s6">0</span><span class="s4">; </span><span class="s1">j &lt; graph-&gt;getNoVertices()</span><span class="s4">; </span><span class="s1">j++) { 
+            </span><span class="s5">for </span><span class="s1">(</span><span class="s5">auto </span><span class="s1">edge: graph-&gt;adj[j]) { 
+                </span><span class="s5">if </span><span class="s1">(edge.first == i) { 
+</span><span class="s0">//                    outSet.insert(edge.second);</span><span class="s1"> 
+</span><span class="s0">//                    inSet.insert(j);</span><span class="s1"> 
+                    cSet.insert(j)</span><span class="s4">;</span><span class="s1"> 
+                } 
+            } 
+        } 
+</span><span class="s0">//        res[i].second = (uint32_t)outSet.size();</span><span class="s1"> 
+</span><span class="s0">//        outSet.clear();</span><span class="s1"> 
+        res[i].second = (uint32_t) cSet.size()</span><span class="s4">;</span><span class="s1"> 
+        cSet.clear()</span><span class="s4">;</span><span class="s1"> 
+    } 
+    </span><span class="s5">return </span><span class="s1">res</span><span class="s4">;</span><span class="s1"> 
+} 
+</span></pre>
+</body>
+</html>

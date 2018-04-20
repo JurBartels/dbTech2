@@ -1,0 +1,96 @@
+<html>
+<head>
+<title>SimpleEvaluator.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #606366; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(128,128,128); }
+.s1 { color: rgb(169,183,198); }
+.s2 { color: rgb(187,181,41); }
+.s3 { color: rgb(106,135,89); }
+.s4 { color: rgb(204,120,50); font-weight: bold; }
+.s5 { color: rgb(204,120,50); }
+</style>
+</head>
+<BODY BGCOLOR="#2b2b2b">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+SimpleEvaluator.h</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0">//</span><span class="s1"> 
+</span><span class="s0">// Created by Nikolay Yakovets on 2018-02-02.</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+ 
+</span><span class="s2">#ifndef </span><span class="s1">QS_SIMPLEEVALUATOR_H 
+</span><span class="s2">#define </span><span class="s1">QS_SIMPLEEVALUATOR_H 
+ 
+ 
+</span><span class="s2">#include </span><span class="s3">&lt;memory&gt;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&lt;cmath&gt;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&quot;SimpleGraph.h&quot;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&quot;RPQTree.h&quot;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&quot;Evaluator.h&quot;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&quot;Graph.h&quot;</span><span class="s1"> 
+ 
+</span><span class="s4">struct </span><span class="s1">aggregateIndexes { 
+    </span><span class="s0">// aggregate indexes: SP, SO, PS, PO, OS, OP, S, P, and O</span><span class="s1"> 
+    std::vector&lt;std::vector&lt;</span><span class="s4">int</span><span class="s1">&gt;&gt; SP</span><span class="s5">;</span><span class="s1"> 
+    std::vector&lt;std::vector&lt;</span><span class="s4">int</span><span class="s1">&gt;&gt; SO</span><span class="s5">;</span><span class="s1"> 
+    std::vector&lt;std::vector&lt;</span><span class="s4">int</span><span class="s1">&gt;&gt; PS</span><span class="s5">;</span><span class="s1"> 
+    std::vector&lt;std::vector&lt;</span><span class="s4">int</span><span class="s1">&gt;&gt; PO</span><span class="s5">;</span><span class="s1"> 
+    std::vector&lt;std::vector&lt;</span><span class="s4">int</span><span class="s1">&gt;&gt; OS</span><span class="s5">;</span><span class="s1"> 
+    std::vector&lt;std::vector&lt;</span><span class="s4">int</span><span class="s1">&gt;&gt; OP</span><span class="s5">;</span><span class="s1"> 
+}</span><span class="s5">;</span><span class="s1"> 
+ 
+</span><span class="s4">struct </span><span class="s1">exhaustiveIndexes { 
+    </span><span class="s0">// exhaustive indexes: SOP, PSO, POS, OSP</span><span class="s1"> 
+    std::vector&lt;std::vector&lt;std::pair&lt;uint32_t</span><span class="s5">,</span><span class="s1">uint32_t&gt;&gt;&gt; SOP</span><span class="s5">;</span><span class="s1"> 
+    std::vector&lt;std::vector&lt;std::pair&lt;uint32_t</span><span class="s5">,</span><span class="s1">uint32_t&gt;&gt;&gt; PSO</span><span class="s5">;</span><span class="s1"> 
+    std::vector&lt;std::vector&lt;std::pair&lt;uint32_t</span><span class="s5">,</span><span class="s1">uint32_t&gt;&gt;&gt; POS</span><span class="s5">;</span><span class="s1"> 
+    std::vector&lt;std::vector&lt;std::pair&lt;uint32_t</span><span class="s5">,</span><span class="s1">uint32_t&gt;&gt;&gt; OSP</span><span class="s5">;</span><span class="s1"> 
+}</span><span class="s5">;</span><span class="s1"> 
+ 
+</span><span class="s4">class </span><span class="s1">SimpleEvaluator : </span><span class="s4">public </span><span class="s1">Evaluator { 
+ 
+    std::shared_ptr&lt;SimpleGraph&gt; graph</span><span class="s5">;</span><span class="s1"> 
+    std::shared_ptr&lt;SimpleEstimator&gt; est</span><span class="s5">;</span><span class="s1"> 
+    std::map&lt;std::vector&lt;std::string&gt;</span><span class="s5">, </span><span class="s1">cardStat&gt; cache</span><span class="s5">;</span><span class="s1"> 
+    std::map&lt;std::string</span><span class="s5">, </span><span class="s1">cardStat&gt; estcache</span><span class="s5">;</span><span class="s1"> 
+    aggregateIndexes agg_indexes</span><span class="s5">;</span><span class="s1"> 
+    exhaustiveIndexes exh_indexes</span><span class="s5">;</span><span class="s1"> 
+ 
+</span><span class="s4">public</span><span class="s1">: 
+ 
+    std::vector&lt;std::string&gt; treeToString(RPQTree *q)</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">void </span><span class="s1">treeToString(RPQTree *q</span><span class="s5">, </span><span class="s1">std::vector&lt;std::string&gt; &amp;vec)</span><span class="s5">;</span><span class="s1"> 
+ 
+    </span><span class="s4">explicit </span><span class="s1">SimpleEvaluator(std::shared_ptr&lt;SimpleGraph&gt; &amp;g)</span><span class="s5">;</span><span class="s1"> 
+    SimpleEvaluator() = </span><span class="s4">default</span><span class="s5">;</span><span class="s1"> 
+ 
+    </span><span class="s4">void </span><span class="s1">prepare() override </span><span class="s5">;</span><span class="s1"> 
+    cardStat evaluate(RPQTree *query) override </span><span class="s5">;</span><span class="s1"> 
+ 
+    std::vector&lt;RPQTree*&gt; getLeaves(RPQTree *query)</span><span class="s5">;</span><span class="s1"> 
+    RPQTree* optimizeQuery(RPQTree *query)</span><span class="s5">;</span><span class="s1"> 
+ 
+    </span><span class="s4">void </span><span class="s1">attachEstimator(std::shared_ptr&lt;SimpleEstimator&gt; &amp;e)</span><span class="s5">;</span><span class="s1"> 
+ 
+    std::shared_ptr&lt;SimpleGraph&gt; evaluate_aux(RPQTree *q)</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">static </span><span class="s1">std::shared_ptr&lt;SimpleGraph&gt; project(uint32_t label</span><span class="s5">, </span><span class="s4">bool </span><span class="s1">inverse</span><span class="s5">, </span><span class="s1">std::shared_ptr&lt;SimpleGraph&gt; &amp;g)</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">static </span><span class="s1">std::shared_ptr&lt;SimpleGraph&gt; join(std::shared_ptr&lt;SimpleGraph&gt; &amp;left</span><span class="s5">, </span><span class="s1">std::shared_ptr&lt;SimpleGraph&gt; &amp;right)</span><span class="s5">;</span><span class="s1"> 
+ 
+    </span><span class="s4">static </span><span class="s1">cardStat computeStats(std::shared_ptr&lt;SimpleGraph&gt; &amp;g)</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">void </span><span class="s1">createAggregateIndex()</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">void </span><span class="s1">createExhaustiveIndex()</span><span class="s5">;</span><span class="s1"> 
+    std::shared_ptr&lt;SimpleGraph&gt; project_agg_index(uint32_t label</span><span class="s5">, </span><span class="s4">bool </span><span class="s1">inverse</span><span class="s5">, </span><span class="s1">std::shared_ptr&lt;SimpleGraph&gt; &amp;g)</span><span class="s5">;</span><span class="s1"> 
+    std::shared_ptr&lt;SimpleGraph&gt; project_exh_index(uint32_t label</span><span class="s5">, </span><span class="s4">bool </span><span class="s1">inverse</span><span class="s5">, </span><span class="s1">std::shared_ptr&lt;SimpleGraph&gt; &amp;g)</span><span class="s5">;</span><span class="s1"> 
+ 
+}</span><span class="s5">;</span><span class="s1"> 
+ 
+ 
+</span><span class="s2">#endif </span><span class="s0">//QS_SIMPLEEVALUATOR_H</span><span class="s1"> 
+</span></pre>
+</body>
+</html>

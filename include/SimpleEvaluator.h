@@ -13,22 +13,12 @@
 #include "Evaluator.h"
 #include "Graph.h"
 
-struct aggregateIndexes {
-    // aggregate indexes: SP, SO, PS, PO, OS, OP, S, P, and O
-    std::vector<std::vector<int>> SP;
-    std::vector<std::vector<int>> SO;
-    std::vector<std::vector<int>> PS;
-    std::vector<std::vector<int>> PO;
-    std::vector<std::vector<int>> OS;
-    std::vector<std::vector<int>> OP;
-};
-
 struct exhaustiveIndexes {
     // exhaustive indexes: SOP, PSO, POS, OSP
-    std::vector<std::vector<std::pair<uint32_t,uint32_t>>> SOP;
+//    std::vector<std::vector<std::pair<uint32_t,uint32_t>>> SOP;
     std::vector<std::vector<std::pair<uint32_t,uint32_t>>> PSO;
     std::vector<std::vector<std::pair<uint32_t,uint32_t>>> POS;
-    std::vector<std::vector<std::pair<uint32_t,uint32_t>>> OSP;
+//    std::vector<std::vector<std::pair<uint32_t,uint32_t>>> OSP;
 };
 
 class SimpleEvaluator : public Evaluator {
@@ -37,7 +27,6 @@ class SimpleEvaluator : public Evaluator {
     std::shared_ptr<SimpleEstimator> est;
     std::map<std::vector<std::string>, cardStat> cache;
     std::map<std::string, cardStat> estcache;
-    aggregateIndexes agg_indexes;
     exhaustiveIndexes exh_indexes;
 
 public:

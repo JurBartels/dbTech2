@@ -1,0 +1,386 @@
+<html>
+<head>
+<title>SimpleEvaluator.cpp</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #606366; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(128,128,128); }
+.s1 { color: rgb(169,183,198); }
+.s2 { color: rgb(187,181,41); }
+.s3 { color: rgb(106,135,89); }
+.s4 { color: rgb(204,120,50); font-weight: bold; }
+.s5 { color: rgb(204,120,50); }
+.s6 { color: rgb(104,151,187); }
+</style>
+</head>
+<BODY BGCOLOR="#2b2b2b">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+SimpleEvaluator.cpp</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0">//</span><span class="s1"> 
+</span><span class="s0">// Created by Nikolay Yakovets on 2018-02-02.</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+ 
+</span><span class="s2">#include </span><span class="s3">&quot;SimpleEstimator.h&quot;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&quot;SimpleEvaluator.h&quot;</span><span class="s1"> 
+ 
+</span><span class="s4">using namespace </span><span class="s1">std</span><span class="s5">;</span><span class="s1"> 
+ 
+SimpleEvaluator::SimpleEvaluator(std::shared_ptr&lt;SimpleGraph&gt; &amp;g) { 
+ 
+    </span><span class="s0">// works only with SimpleGraph</span><span class="s1"> 
+    graph = g</span><span class="s5">;</span><span class="s1"> 
+    est = </span><span class="s4">nullptr</span><span class="s5">; </span><span class="s0">// estimator not attached by default</span><span class="s1"> 
+    cache</span><span class="s5">;</span><span class="s1"> 
+    estcache</span><span class="s5">;</span><span class="s1"> 
+} 
+ 
+</span><span class="s4">void </span><span class="s1">SimpleEvaluator::attachEstimator(std::shared_ptr&lt;SimpleEstimator&gt; &amp;e) { 
+    est = e</span><span class="s5">;</span><span class="s1"> 
+} 
+ 
+</span><span class="s4">void </span><span class="s1">SimpleEvaluator::prepare() { 
+    </span><span class="s0">// if attached, prepare the estimator</span><span class="s1"> 
+    </span><span class="s4">if</span><span class="s1">(est != </span><span class="s4">nullptr</span><span class="s1">) est-&gt;prepare()</span><span class="s5">;</span><span class="s1"> 
+ 
+    </span><span class="s0">// prepare other things here.., if necessary</span><span class="s1"> 
+ 
+    createExhaustiveIndex()</span><span class="s5">;</span><span class="s1"> 
+} 
+ 
+</span><span class="s4">void </span><span class="s1">SimpleEvaluator::createExhaustiveIndex() { 
+    </span><span class="s0">// exhaustive indexes: SOP, PSO, POS, OSP</span><span class="s1"> 
+    exh_indexes.POS.resize(graph-&gt;getNoLabels())</span><span class="s5">;</span><span class="s1"> 
+    exh_indexes.PSO.resize(graph-&gt;getNoLabels())</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">for</span><span class="s1">(uint32_t j = </span><span class="s6">0</span><span class="s5">; </span><span class="s1">j &lt; graph-&gt;getNoVertices()</span><span class="s5">; </span><span class="s1">j++) { 
+        </span><span class="s4">for </span><span class="s1">(</span><span class="s4">auto </span><span class="s1">edge: graph-&gt;adj[j]) { 
+            </span><span class="s0">//edge.first = edge type, edge.second = out node, j = in node</span><span class="s1"> 
+            </span><span class="s0">// POS = edge type -&gt; (out node, in node)</span><span class="s1"> 
+            exh_indexes.POS[edge.first].push_back(std::make_pair(edge.second</span><span class="s5">, </span><span class="s1">j))</span><span class="s5">;</span><span class="s1"> 
+            </span><span class="s0">// PSO = edge type -&gt; (in node, out node)</span><span class="s1"> 
+            exh_indexes.PSO[edge.first].push_back(std::make_pair(j</span><span class="s5">, </span><span class="s1">edge.second))</span><span class="s5">;</span><span class="s1"> 
+        } 
+    } 
+} 
+ 
+cardStat SimpleEvaluator::computeStats(std::shared_ptr&lt;SimpleGraph&gt; &amp;g) { 
+ 
+    cardStat stats {}</span><span class="s5">;</span><span class="s1"> 
+ 
+    </span><span class="s0">// Both of these dont seem to be checked so why bother</span><span class="s1"> 
+ 
+</span><span class="s0">//    for(int source = 0; source &lt; g-&gt;getNoVertices(); source++) {</span><span class="s1"> 
+</span><span class="s0">//        if(!g-&gt;adj[source].empty()) stats.noOut++;</span><span class="s1"> 
+</span><span class="s0">//    }</span><span class="s1"> 
+ 
+    stats.noPaths = g-&gt;getNoDistinctEdges()</span><span class="s5">;</span><span class="s1"> 
+ 
+ 
+    </span><span class="s0">// This is the only use of reverse_adj, so we can get rid of it</span><span class="s1"> 
+ 
+</span><span class="s0">//    for(int target = 0; target &lt; g-&gt;getNoVertices(); target++) {</span><span class="s1"> 
+</span><span class="s0">//        if(!g-&gt;reverse_adj[target].empty()) stats.noIn++;</span><span class="s1"> 
+</span><span class="s0">//    }</span><span class="s1"> 
+ 
+    </span><span class="s4">return </span><span class="s1">stats</span><span class="s5">;</span><span class="s1"> 
+} 
+ 
+</span><span class="s0">//std::shared_ptr&lt;SimpleGraph&gt; SimpleEvaluator::project(uint32_t projectLabel, bool inverse, std::shared_ptr&lt;SimpleGraph&gt; &amp;in) {</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    auto out = std::make_shared&lt;SimpleGraph&gt;(in-&gt;getNoVertices());</span><span class="s1"> 
+</span><span class="s0">//    out-&gt;setNoLabels(in-&gt;getNoLabels());</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    if(!inverse) {</span><span class="s1"> 
+</span><span class="s0">//        // going forward</span><span class="s1"> 
+</span><span class="s0">//        for(uint32_t source = 0; source &lt; in-&gt;getNoVertices(); source++) {</span><span class="s1"> 
+</span><span class="s0">//            for (auto labelTarget : in-&gt;adj[source]) {</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//                auto label = labelTarget.first;</span><span class="s1"> 
+</span><span class="s0">//                auto target = labelTarget.second;</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//                if (label == projectLabel)</span><span class="s1"> 
+</span><span class="s0">//                    out-&gt;addEdge(source, target, label);</span><span class="s1"> 
+</span><span class="s0">//            }</span><span class="s1"> 
+</span><span class="s0">//        }</span><span class="s1"> 
+</span><span class="s0">//    } else {</span><span class="s1"> 
+</span><span class="s0">//        // going backward</span><span class="s1"> 
+</span><span class="s0">//        for(uint32_t source = 0; source &lt; in-&gt;getNoVertices(); source++) {</span><span class="s1"> 
+</span><span class="s0">//            for (auto labelTarget : in-&gt;reverse_adj[source]) {</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//                auto label = labelTarget.first;</span><span class="s1"> 
+</span><span class="s0">//                auto target = labelTarget.second;</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//                if (label == projectLabel)</span><span class="s1"> 
+</span><span class="s0">//                    out-&gt;addEdge(source, target, label);</span><span class="s1"> 
+</span><span class="s0">//            }</span><span class="s1"> 
+</span><span class="s0">//        }</span><span class="s1"> 
+</span><span class="s0">//    }</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    return out;</span><span class="s1"> 
+</span><span class="s0">//}</span><span class="s1"> 
+ 
+std::shared_ptr&lt;SimpleGraph&gt; SimpleEvaluator::project_exh_index(uint32_t projectLabel</span><span class="s5">, </span><span class="s4">bool </span><span class="s1">inverse</span><span class="s5">, </span><span class="s1">std::shared_ptr&lt;SimpleGraph&gt; &amp;in) { 
+    </span><span class="s4">auto </span><span class="s1">out = std::make_shared&lt;SimpleGraph&gt;(in-&gt;getNoVertices())</span><span class="s5">;</span><span class="s1"> 
+    out-&gt;setNoLabels(in-&gt;getNoLabels())</span><span class="s5">;</span><span class="s1"> 
+ 
+    </span><span class="s4">auto </span><span class="s1">PSO = exh_indexes.PSO[projectLabel]</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">auto </span><span class="s1">POS = exh_indexes.POS[projectLabel]</span><span class="s5">;</span><span class="s1"> 
+ 
+    </span><span class="s4">if </span><span class="s1">(!inverse) { 
+        </span><span class="s0">// forward</span><span class="s1"> 
+        </span><span class="s4">for </span><span class="s1">(</span><span class="s4">auto </span><span class="s1">edge : PSO) { 
+            </span><span class="s0">// edge.first = in node, edge.second = out node</span><span class="s1"> 
+            out-&gt;addEdge(edge.first</span><span class="s5">, </span><span class="s1">edge.second</span><span class="s5">, </span><span class="s1">projectLabel)</span><span class="s5">;</span><span class="s1"> 
+        } 
+    } </span><span class="s4">else </span><span class="s1">{ 
+        </span><span class="s0">// backward</span><span class="s1"> 
+        </span><span class="s4">for </span><span class="s1">(</span><span class="s4">auto </span><span class="s1">edge : POS) { 
+            </span><span class="s0">// edge.first = out node, edge.second = in node</span><span class="s1"> 
+            out-&gt;addEdge(edge.first</span><span class="s5">, </span><span class="s1">edge.second</span><span class="s5">, </span><span class="s1">projectLabel)</span><span class="s5">;</span><span class="s1"> 
+        } 
+    } 
+ 
+    </span><span class="s4">return </span><span class="s1">out</span><span class="s5">;</span><span class="s1"> 
+} 
+ 
+std::shared_ptr&lt;SimpleGraph&gt; SimpleEvaluator::join(std::shared_ptr&lt;SimpleGraph&gt; &amp;left</span><span class="s5">, </span><span class="s1">std::shared_ptr&lt;SimpleGraph&gt; &amp;right) { 
+ 
+    </span><span class="s4">auto </span><span class="s1">out = std::make_shared&lt;SimpleGraph&gt;(left-&gt;getNoVertices())</span><span class="s5">;</span><span class="s1"> 
+    out-&gt;setNoLabels(</span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span><span class="s1"> 
+ 
+    </span><span class="s4">for</span><span class="s1">(uint32_t leftSource = </span><span class="s6">0</span><span class="s5">; </span><span class="s1">leftSource &lt; left-&gt;getNoVertices()</span><span class="s5">; </span><span class="s1">leftSource++) { 
+        </span><span class="s4">for </span><span class="s1">(</span><span class="s4">auto </span><span class="s1">labelTarget : left-&gt;adj[leftSource]) { 
+ 
+            </span><span class="s4">int </span><span class="s1">leftTarget = labelTarget.second</span><span class="s5">;</span><span class="s1"> 
+            </span><span class="s0">// try to join the left target with right source</span><span class="s1"> 
+            </span><span class="s4">for </span><span class="s1">(</span><span class="s4">auto </span><span class="s1">rightLabelTarget : right-&gt;adj[leftTarget]) { 
+ 
+                </span><span class="s4">auto </span><span class="s1">rightTarget = rightLabelTarget.second</span><span class="s5">;</span><span class="s1"> 
+                out-&gt;addEdge(leftSource</span><span class="s5">, </span><span class="s1">rightTarget</span><span class="s5">, </span><span class="s6">0</span><span class="s1">)</span><span class="s5">;</span><span class="s1"> 
+ 
+            } 
+        } 
+    } 
+ 
+    </span><span class="s4">return </span><span class="s1">out</span><span class="s5">;</span><span class="s1"> 
+} 
+ 
+</span><span class="s0">//std::shared_ptr&lt;SimpleGraph&gt; SimpleEvaluator::evaluate_aux(RPQTree *q) {</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    // evaluate according to the AST bottom-up</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    if(q-&gt;isLeaf()) {</span><span class="s1"> 
+</span><span class="s0">//        // project out the label in the AST</span><span class="s1"> 
+</span><span class="s0">//        std::regex directLabel (R&quot;((\d+)\+)&quot;);</span><span class="s1"> 
+</span><span class="s0">//        std::regex inverseLabel (R&quot;((\d+)\-)&quot;);</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//        std::smatch matches;</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//        uint32_t label;</span><span class="s1"> 
+</span><span class="s0">//        bool inverse;</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//        if(std::regex_search(q-&gt;data, matches, directLabel)) {</span><span class="s1"> 
+</span><span class="s0">//            label = (uint32_t) std::stoul(matches[1]);</span><span class="s1"> 
+</span><span class="s0">//            inverse = false;</span><span class="s1"> 
+</span><span class="s0">//        } else if(std::regex_search(q-&gt;data, matches, inverseLabel)) {</span><span class="s1"> 
+</span><span class="s0">//            label = (uint32_t) std::stoul(matches[1]);</span><span class="s1"> 
+</span><span class="s0">//            inverse = true;</span><span class="s1"> 
+</span><span class="s0">//        } else {</span><span class="s1"> 
+</span><span class="s0">//            std::cerr &lt;&lt; &quot;Label parsing failed!&quot; &lt;&lt; std::endl;</span><span class="s1"> 
+</span><span class="s0">//            return nullptr;</span><span class="s1"> 
+</span><span class="s0">//        }</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//        //return SimpleEvaluator::project(label, inverse, graph);</span><span class="s1"> 
+</span><span class="s0">//        //return SimpleEvaluator::project_agg_index(label, inverse, graph);</span><span class="s1"> 
+</span><span class="s0">//        return SimpleEvaluator::project_exh_index(label, inverse, graph);</span><span class="s1"> 
+</span><span class="s0">//    }</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    if(q-&gt;isConcat()) {</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//        // evaluate the children</span><span class="s1"> 
+</span><span class="s0">//        auto leftGraph = SimpleEvaluator::evaluate_aux(q-&gt;left);</span><span class="s1"> 
+</span><span class="s0">//        auto rightGraph = SimpleEvaluator::evaluate_aux(q-&gt;right);</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//        // join left with right</span><span class="s1"> 
+</span><span class="s0">//        return SimpleEvaluator::join(leftGraph, rightGraph);</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    }</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    return nullptr;</span><span class="s1"> 
+</span><span class="s0">//}</span><span class="s1"> 
+ 
+std::vector&lt;RPQTree*&gt; SimpleEvaluator::getLeaves(RPQTree *query) { 
+    </span><span class="s4">if </span><span class="s1">(query-&gt;isLeaf()) { 
+        </span><span class="s4">return </span><span class="s1">{query}</span><span class="s5">;</span><span class="s1"> 
+    } 
+ 
+    std::vector&lt;RPQTree*&gt; result</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">if </span><span class="s1">(query-&gt;left) { 
+        </span><span class="s4">auto </span><span class="s1">rec = getLeaves(query-&gt;left)</span><span class="s5">;</span><span class="s1"> 
+        result.insert(result.end()</span><span class="s5">, </span><span class="s1">rec.begin()</span><span class="s5">, </span><span class="s1">rec.end())</span><span class="s5">;</span><span class="s1"> 
+    } 
+    </span><span class="s4">if </span><span class="s1">(query-&gt;right) { 
+        </span><span class="s4">auto </span><span class="s1">rec = getLeaves(query-&gt;right)</span><span class="s5">;</span><span class="s1"> 
+        result.insert(result.end()</span><span class="s5">, </span><span class="s1">rec.begin()</span><span class="s5">, </span><span class="s1">rec.end())</span><span class="s5">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s4">return </span><span class="s1">result</span><span class="s5">;</span><span class="s1"> 
+} 
+ 
+RPQTree* SimpleEvaluator::optimizeQuery(RPQTree *query) { 
+    std::vector&lt;RPQTree*&gt; leaves = getLeaves(query)</span><span class="s5">;</span><span class="s1"> 
+ 
+    </span><span class="s4">while </span><span class="s1">(leaves.size() &gt; </span><span class="s6">1</span><span class="s1">) { 
+        uint32_t bestScore = </span><span class="s6">0</span><span class="s5">;</span><span class="s1"> 
+        RPQTree *bestTree = </span><span class="s4">nullptr</span><span class="s5">;</span><span class="s1"> 
+        </span><span class="s4">int </span><span class="s1">index = -</span><span class="s6">1</span><span class="s5">;</span><span class="s1"> 
+ 
+        </span><span class="s4">for </span><span class="s1">(</span><span class="s4">int </span><span class="s1">i = </span><span class="s6">0</span><span class="s5">; </span><span class="s1">i &lt; leaves.size()-</span><span class="s6">1</span><span class="s5">; </span><span class="s1">++i) { 
+            std::string data(</span><span class="s3">&quot;/&quot;</span><span class="s1">)</span><span class="s5">;</span><span class="s1"> 
+            </span><span class="s4">auto </span><span class="s1">*currentTree = </span><span class="s4">new </span><span class="s1">RPQTree(data</span><span class="s5">, </span><span class="s1">leaves[i]</span><span class="s5">, </span><span class="s1">leaves[i+</span><span class="s6">1</span><span class="s1">])</span><span class="s5">;</span><span class="s1"> 
+            uint32_t currentScore = est-&gt;estimate(currentTree).noPaths</span><span class="s5">;</span><span class="s1"> 
+ 
+            </span><span class="s4">if </span><span class="s1">(bestScore == </span><span class="s6">0 </span><span class="s1">|| bestScore &gt; currentScore) { 
+                bestScore = currentScore</span><span class="s5">;</span><span class="s1"> 
+                bestTree = currentTree</span><span class="s5">;</span><span class="s1"> 
+                index = i</span><span class="s5">;</span><span class="s1"> 
+            } 
+        } 
+ 
+        leaves.erase(leaves.begin() + index + </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span><span class="s1"> 
+        leaves[index] = bestTree</span><span class="s5">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s4">return </span><span class="s1">leaves[</span><span class="s6">0</span><span class="s1">]</span><span class="s5">;</span><span class="s1"> 
+} 
+ 
+</span><span class="s0">//cardStatstd::shared_ptr&lt;SimpleGraph&gt; SimpleEvaluator::evaluate_aux(RPQTree *q) {</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    // evaluate according to the AST bottom-up</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    if(q-&gt;isLeaf()) {</span><span class="s1"> 
+</span><span class="s0">//        // project out the label in the AST</span><span class="s1"> 
+</span><span class="s0">//        std::regex directLabel (R&quot;((\d+)\+)&quot;);</span><span class="s1"> 
+</span><span class="s0">//        std::regex inverseLabel (R&quot;((\d+)\-)&quot;);</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//        std::smatch matches;</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//        uint32_t label;</span><span class="s1"> 
+</span><span class="s0">//        bool inverse;</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//        if(std::regex_search(q-&gt;data, matches, directLabel)) {</span><span class="s1"> 
+</span><span class="s0">//            label = (uint32_t) std::stoul(matches[1]);</span><span class="s1"> 
+</span><span class="s0">//            inverse = false;</span><span class="s1"> 
+</span><span class="s0">//        } else if(std::regex_search(q-&gt;data, matches, inverseLabel)) {</span><span class="s1"> 
+</span><span class="s0">//            label = (uint32_t) std::stoul(matches[1]);</span><span class="s1"> 
+</span><span class="s0">//            inverse = true;</span><span class="s1"> 
+</span><span class="s0">//        } else {</span><span class="s1"> 
+</span><span class="s0">//            std::cerr &lt;&lt; &quot;Label parsing failed!&quot; &lt;&lt; std::endl;</span><span class="s1"> 
+</span><span class="s0">//            return nullptr;</span><span class="s1"> 
+</span><span class="s0">//        }</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//        //return SimpleEvaluator::project(label, inverse, graph);</span><span class="s1"> 
+</span><span class="s0">//        //return SimpleEvaluator::project_agg_index(label, inverse, graph);</span><span class="s1"> 
+</span><span class="s0">//        return SimpleEvaluator::project_exh_index(label, inverse, graph);</span><span class="s1"> 
+</span><span class="s0">//    }</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    if(q-&gt;isConcat()) {</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//        // evaluate the children</span><span class="s1"> 
+</span><span class="s0">//        auto leftGraph = SimpleEvaluator::evaluate_aux(q-&gt;left);</span><span class="s1"> 
+</span><span class="s0">//        auto rightGraph = SimpleEvaluator::evaluate_aux(q-&gt;right);</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//        // join left with right</span><span class="s1"> 
+</span><span class="s0">//        return SimpleEvaluator::join(leftGraph, rightGraph);</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    }</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+</span><span class="s0">//    return nullptr;</span><span class="s1"> 
+</span><span class="s0">//}</span><span class="s1"> 
+ 
+std::vector&lt;std::string&gt; SimpleEvaluator::treeToString(RPQTree *q) { 
+    std::vector&lt;std::string&gt; vec</span><span class="s5">;</span><span class="s1"> 
+    SimpleEvaluator::treeToString(q</span><span class="s5">, </span><span class="s1">vec)</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">return </span><span class="s1">vec</span><span class="s5">;</span><span class="s1"> 
+} 
+ 
+</span><span class="s4">void </span><span class="s1">SimpleEvaluator::treeToString(RPQTree *q</span><span class="s5">, </span><span class="s1">std::vector&lt;std::string&gt; &amp;vec) { 
+    </span><span class="s4">if </span><span class="s1">(q-&gt;isLeaf()) { 
+        vec.push_back(q-&gt;data)</span><span class="s5">;</span><span class="s1"> 
+    } </span><span class="s4">else </span><span class="s1">{ 
+        SimpleEvaluator::treeToString(q-&gt;left</span><span class="s5">, </span><span class="s1">vec)</span><span class="s5">;</span><span class="s1"> 
+        SimpleEvaluator::treeToString(q-&gt;right</span><span class="s5">, </span><span class="s1">vec)</span><span class="s5">;</span><span class="s1"> 
+    } 
+} 
+ 
+cardStat SimpleEvaluator::evaluate(RPQTree *query) { 
+ 
+    vector &lt;string&gt; paths</span><span class="s5">;</span><span class="s1"> 
+    vector &lt;shared_ptr&lt;SimpleGraph&gt;&gt; projections</span><span class="s5">;</span><span class="s1"> 
+    shared_ptr&lt;SimpleGraph&gt; result = </span><span class="s4">nullptr</span><span class="s5">;</span><span class="s1"> 
+ 
+    cout &lt;&lt; endl</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s0">// Initalize a vector with the labels</span><span class="s1"> 
+    paths = SimpleEvaluator::treeToString(query)</span><span class="s5">;</span><span class="s1"> 
+    vector &lt;string&gt; key = paths</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">if </span><span class="s1">(cache.find(key) != cache.end()) { 
+        </span><span class="s4">return </span><span class="s1">cache.find(key)-&gt;second</span><span class="s5">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s0">// Project all the labels</span><span class="s1"> 
+    </span><span class="s4">for </span><span class="s1">(</span><span class="s4">int </span><span class="s1">i=</span><span class="s6">0</span><span class="s5">; </span><span class="s1">i &lt; paths.size()</span><span class="s5">; </span><span class="s1">i++) { 
+        uint32_t label = (uint32_t) std::stoul(paths[i].substr(</span><span class="s6">0</span><span class="s5">, </span><span class="s1">paths[i].length()-</span><span class="s6">1</span><span class="s1">))</span><span class="s5">;</span><span class="s1"> 
+        </span><span class="s4">bool </span><span class="s1">inverse = paths[i].at(</span><span class="s6">1</span><span class="s1">) == </span><span class="s3">'-'</span><span class="s5">;</span><span class="s1"> 
+        projections.push_back(project_exh_index(label</span><span class="s5">, </span><span class="s1">inverse</span><span class="s5">, </span><span class="s1">graph))</span><span class="s5">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s4">while </span><span class="s1">(paths.size() &gt; </span><span class="s6">2</span><span class="s1">) { 
+ 
+        </span><span class="s0">// Find the cheapest join</span><span class="s1"> 
+        vector &lt;</span><span class="s4">int</span><span class="s1">&gt; estimate</span><span class="s5">;</span><span class="s1"> 
+        </span><span class="s4">for </span><span class="s1">(</span><span class="s4">int </span><span class="s1">i=</span><span class="s6">0</span><span class="s5">; </span><span class="s1">i &lt; paths.size()-</span><span class="s6">1</span><span class="s5">; </span><span class="s1">i++) { 
+            string path = paths[i] + </span><span class="s3">&quot;/&quot; </span><span class="s1">+ paths[i+</span><span class="s6">1</span><span class="s1">]</span><span class="s5">;</span><span class="s1"> 
+            cardStat ea</span><span class="s5">;</span><span class="s1"> 
+            cout &lt;&lt; path &lt;&lt; </span><span class="s3">&quot; &quot;</span><span class="s5">;</span><span class="s1"> 
+            </span><span class="s4">if </span><span class="s1">(estcache.find(path) != estcache.end()) { 
+                ea = estcache.find(path)-&gt;second</span><span class="s5">;</span><span class="s1"> 
+                cout &lt;&lt; ea.noPaths &lt;&lt; endl</span><span class="s5">;</span><span class="s1"> 
+            } </span><span class="s4">else </span><span class="s1">{ 
+                ea = est-&gt;estimate(RPQTree::strToTree(path))</span><span class="s5">;</span><span class="s1"> 
+                estcache.insert(std::pair&lt;std::string</span><span class="s5">, </span><span class="s1">cardStat&gt;(path</span><span class="s5">, </span><span class="s1">ea))</span><span class="s5">;</span><span class="s1"> 
+            } 
+            estimate.push_back(ea.noPaths)</span><span class="s5">;</span><span class="s1"> 
+        } 
+ 
+        </span><span class="s4">int </span><span class="s1">minPos = </span><span class="s6">0</span><span class="s5">;</span><span class="s1"> 
+        </span><span class="s4">for </span><span class="s1">(</span><span class="s4">unsigned </span><span class="s1">i = </span><span class="s6">0</span><span class="s5">; </span><span class="s1">i &lt; estimate.size()</span><span class="s5">; </span><span class="s1">++i ) 
+        { 
+            </span><span class="s4">if </span><span class="s1">(estimate[i] &lt; estimate[minPos]) { 
+                minPos = i</span><span class="s5">;</span><span class="s1"> 
+            } 
+        } 
+ 
+        </span><span class="s4">auto </span><span class="s1">merged_leafs = join(projections[minPos]</span><span class="s5">, </span><span class="s1">projections[minPos+</span><span class="s6">1</span><span class="s1">])</span><span class="s5">;</span><span class="s1"> 
+        paths.insert(paths.begin() + minPos</span><span class="s5">, </span><span class="s1">paths[minPos] + </span><span class="s3">&quot;/&quot; </span><span class="s1">+ paths[minPos+</span><span class="s6">1</span><span class="s1">])</span><span class="s5">;</span><span class="s1"> 
+        paths.erase(paths.begin() + minPos + </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span><span class="s1"> 
+        paths.erase(paths.begin() + minPos + </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span><span class="s1"> 
+        projections.insert(projections.begin() + minPos</span><span class="s5">, </span><span class="s1">merged_leafs)</span><span class="s5">;</span><span class="s1"> 
+        projections.erase(projections.begin() + minPos + </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span><span class="s1"> 
+        projections.erase(projections.begin() + minPos + </span><span class="s6">1</span><span class="s1">)</span><span class="s5">;</span><span class="s1"> 
+ 
+    } 
+    </span><span class="s4">auto </span><span class="s1">last = projections[</span><span class="s6">0</span><span class="s1">]</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">if </span><span class="s1">(projections.size() &gt; </span><span class="s6">1</span><span class="s1">) { 
+        last = join(projections[</span><span class="s6">0</span><span class="s1">]</span><span class="s5">, </span><span class="s1">projections[</span><span class="s6">1</span><span class="s1">])</span><span class="s5">;</span><span class="s1"> 
+    } 
+    cardStat eval = computeStats(last)</span><span class="s5">;</span><span class="s1"> 
+    cache.insert(std::pair&lt;std::vector&lt;std::string&gt;</span><span class="s5">, </span><span class="s1">cardStat&gt;(key</span><span class="s5">, </span><span class="s1">eval))</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">return </span><span class="s1">eval</span><span class="s5">;</span><span class="s1"> 
+ 
+} 
+</span></pre>
+</body>
+</html>

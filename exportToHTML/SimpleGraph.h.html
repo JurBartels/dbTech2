@@ -1,0 +1,67 @@
+<html>
+<head>
+<title>SimpleGraph.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #606366; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(128,128,128); }
+.s1 { color: rgb(169,183,198); }
+.s2 { color: rgb(187,181,41); }
+.s3 { color: rgb(106,135,89); }
+.s4 { color: rgb(204,120,50); font-weight: bold; }
+.s5 { color: rgb(204,120,50); }
+.s6 { color: rgb(104,151,187); }
+</style>
+</head>
+<BODY BGCOLOR="#2b2b2b">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+SimpleGraph.h</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0">//</span><span class="s1"> 
+</span><span class="s0">// Created by Nikolay Yakovets on 2018-01-31.</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+ 
+</span><span class="s2">#ifndef </span><span class="s1">QS_SIMPLEGRAPH_H 
+</span><span class="s2">#define </span><span class="s1">QS_SIMPLEGRAPH_H 
+ 
+</span><span class="s2">#include </span><span class="s3">&lt;unordered_map&gt;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&lt;unordered_set&gt;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&lt;vector&gt;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&lt;iostream&gt;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&lt;regex&gt;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&lt;fstream&gt;</span><span class="s1"> 
+</span><span class="s2">#include </span><span class="s3">&quot;Graph.h&quot;</span><span class="s1"> 
+ 
+</span><span class="s4">class </span><span class="s1">SimpleGraph : </span><span class="s4">public </span><span class="s1">Graph { 
+</span><span class="s4">public</span><span class="s1">: 
+    std::vector&lt;std::vector&lt;std::pair&lt;uint32_t</span><span class="s5">,</span><span class="s1">uint32_t&gt;&gt;&gt; adj</span><span class="s5">;</span><span class="s1"> 
+</span><span class="s4">protected</span><span class="s1">: 
+    uint32_t V</span><span class="s5">;</span><span class="s1"> 
+    uint32_t L</span><span class="s5">;</span><span class="s1"> 
+ 
+</span><span class="s4">public</span><span class="s1">: 
+ 
+    SimpleGraph() : V(</span><span class="s6">0</span><span class="s1">)</span><span class="s5">, </span><span class="s1">L(</span><span class="s6">0</span><span class="s1">) {}</span><span class="s5">;</span><span class="s1"> 
+    ~SimpleGraph() = </span><span class="s4">default</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">explicit </span><span class="s1">SimpleGraph(uint32_t n)</span><span class="s5">;</span><span class="s1"> 
+ 
+    uint32_t getNoVertices() </span><span class="s4">const </span><span class="s1">override </span><span class="s5">;</span><span class="s1"> 
+    uint32_t getNoEdges() </span><span class="s4">const </span><span class="s1">override </span><span class="s5">;</span><span class="s1"> 
+    uint32_t getNoDistinctEdges() </span><span class="s4">const </span><span class="s1">override </span><span class="s5">;</span><span class="s1"> 
+    uint32_t getNoLabels() </span><span class="s4">const </span><span class="s1">override </span><span class="s5">;</span><span class="s1"> 
+ 
+    </span><span class="s4">void </span><span class="s1">addEdge(uint32_t from</span><span class="s5">, </span><span class="s1">uint32_t to</span><span class="s5">, </span><span class="s1">uint32_t edgeLabel) override </span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">void </span><span class="s1">readFromContiguousFile(</span><span class="s4">const </span><span class="s1">std::string &amp;fileName) override </span><span class="s5">;</span><span class="s1"> 
+ 
+    </span><span class="s4">void </span><span class="s1">setNoVertices(uint32_t n)</span><span class="s5">;</span><span class="s1"> 
+    </span><span class="s4">void </span><span class="s1">setNoLabels(uint32_t noLabels)</span><span class="s5">;</span><span class="s1"> 
+ 
+}</span><span class="s5">;</span><span class="s1"> 
+ 
+</span><span class="s2">#endif </span><span class="s0">//QS_SIMPLEGRAPH_H</span><span class="s1"> 
+</span></pre>
+</body>
+</html>

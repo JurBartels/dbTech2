@@ -1,0 +1,136 @@
+<html>
+<head>
+<title>SimpleGraph.cpp</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #606366; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(128,128,128); }
+.s1 { color: rgb(169,183,198); }
+.s2 { color: rgb(187,181,41); }
+.s3 { color: rgb(106,135,89); }
+.s4 { color: rgb(204,120,50); }
+.s5 { color: rgb(204,120,50); font-weight: bold; }
+.s6 { color: rgb(104,151,187); }
+</style>
+</head>
+<BODY BGCOLOR="#2b2b2b">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+SimpleGraph.cpp</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0">//</span><span class="s1"> 
+</span><span class="s0">// Created by Nikolay Yakovets on 2018-01-31.</span><span class="s1"> 
+</span><span class="s0">//</span><span class="s1"> 
+ 
+</span><span class="s2">#include </span><span class="s3">&quot;SimpleGraph.h&quot;</span><span class="s1"> 
+ 
+SimpleGraph::SimpleGraph(uint32_t n)   { 
+    setNoVertices(n)</span><span class="s4">;</span><span class="s1"> 
+} 
+ 
+uint32_t SimpleGraph::getNoVertices() </span><span class="s5">const </span><span class="s1">{ 
+    </span><span class="s5">return </span><span class="s1">V</span><span class="s4">;</span><span class="s1"> 
+} 
+ 
+</span><span class="s5">void </span><span class="s1">SimpleGraph::setNoVertices(uint32_t n) { 
+    V = n</span><span class="s4">;</span><span class="s1"> 
+    adj.resize(V)</span><span class="s4">;</span><span class="s1"> 
+ 
+} 
+ 
+uint32_t SimpleGraph::getNoEdges() </span><span class="s5">const </span><span class="s1">{ 
+    uint32_t sum = </span><span class="s6">0</span><span class="s4">;</span><span class="s1"> 
+    </span><span class="s5">for </span><span class="s1">(</span><span class="s5">const auto </span><span class="s1">&amp; l : adj) 
+        sum += l.size()</span><span class="s4">;</span><span class="s1"> 
+    </span><span class="s5">return </span><span class="s1">sum</span><span class="s4">;</span><span class="s1"> 
+} 
+ 
+</span><span class="s0">// sort on the second item in the pair, then on the first (ascending order)</span><span class="s1"> 
+</span><span class="s5">bool </span><span class="s1">sortPairs(</span><span class="s5">const </span><span class="s1">std::pair&lt;uint32_t</span><span class="s4">,</span><span class="s1">uint32_t&gt; &amp;a</span><span class="s4">, </span><span class="s5">const </span><span class="s1">std::pair&lt;uint32_t</span><span class="s4">,</span><span class="s1">uint32_t&gt; &amp;b) { 
+    </span><span class="s5">if </span><span class="s1">(a.second &lt; b.second) </span><span class="s5">return true</span><span class="s4">;</span><span class="s1"> 
+    </span><span class="s5">if </span><span class="s1">(a.second == b.second) </span><span class="s5">return </span><span class="s1">a.first &lt; b.first</span><span class="s4">;</span><span class="s1"> 
+    </span><span class="s5">return false</span><span class="s4">;</span><span class="s1"> 
+} 
+ 
+uint32_t SimpleGraph::getNoDistinctEdges() </span><span class="s5">const </span><span class="s1">{ 
+ 
+    uint32_t sum = </span><span class="s6">0</span><span class="s4">;</span><span class="s1"> 
+ 
+    </span><span class="s5">for </span><span class="s1">(</span><span class="s5">auto </span><span class="s1">sourceVec : adj) { 
+ 
+        std::sort(sourceVec.begin()</span><span class="s4">, </span><span class="s1">sourceVec.end()</span><span class="s4">, </span><span class="s1">sortPairs)</span><span class="s4">;</span><span class="s1"> 
+ 
+        uint32_t prevTarget = </span><span class="s6">0</span><span class="s4">;</span><span class="s1"> 
+        uint32_t prevLabel = </span><span class="s6">0</span><span class="s4">;</span><span class="s1"> 
+        </span><span class="s5">bool </span><span class="s1">first = </span><span class="s5">true</span><span class="s4">;</span><span class="s1"> 
+ 
+        </span><span class="s5">for </span><span class="s1">(</span><span class="s5">const auto </span><span class="s1">&amp;labelTgtPair : sourceVec) { 
+            </span><span class="s5">if </span><span class="s1">(first || !(prevTarget == labelTgtPair.second &amp;&amp; prevLabel == labelTgtPair.first)) { 
+                first = </span><span class="s5">false</span><span class="s4">;</span><span class="s1"> 
+                sum++</span><span class="s4">;</span><span class="s1"> 
+                prevTarget = labelTgtPair.second</span><span class="s4">;</span><span class="s1"> 
+                prevLabel = labelTgtPair.first</span><span class="s4">;</span><span class="s1"> 
+            } 
+        } 
+    } 
+ 
+    </span><span class="s5">return </span><span class="s1">sum</span><span class="s4">;</span><span class="s1"> 
+} 
+ 
+uint32_t SimpleGraph::getNoLabels() </span><span class="s5">const </span><span class="s1">{ 
+    </span><span class="s5">return </span><span class="s1">L</span><span class="s4">;</span><span class="s1"> 
+} 
+ 
+</span><span class="s5">void </span><span class="s1">SimpleGraph::setNoLabels(uint32_t noLabels) { 
+    L = noLabels</span><span class="s4">;</span><span class="s1"> 
+} 
+ 
+</span><span class="s5">void </span><span class="s1">SimpleGraph::addEdge(uint32_t from</span><span class="s4">, </span><span class="s1">uint32_t to</span><span class="s4">, </span><span class="s1">uint32_t edgeLabel) { 
+    </span><span class="s5">if</span><span class="s1">(from &gt;= V || to &gt;= V || edgeLabel &gt;= L) 
+        </span><span class="s5">throw </span><span class="s1">std::runtime_error(std::string(</span><span class="s3">&quot;Edge data out of bounds: &quot;</span><span class="s1">) + 
+                                         </span><span class="s3">&quot;(&quot; </span><span class="s1">+ std::to_string(from) + </span><span class="s3">&quot;,&quot; </span><span class="s1">+ std::to_string(to) + </span><span class="s3">&quot;,&quot; </span><span class="s1">+ 
+                                         std::to_string(edgeLabel) + </span><span class="s3">&quot;)&quot;</span><span class="s1">)</span><span class="s4">;</span><span class="s1"> 
+    adj[from].emplace_back(std::make_pair(edgeLabel</span><span class="s4">, </span><span class="s1">to))</span><span class="s4">;</span><span class="s1"> 
+    </span><span class="s0">//reverse_adj[to].emplace_back(std::make_pair(edgeLabel, from));</span><span class="s1"> 
+} 
+ 
+</span><span class="s5">void </span><span class="s1">SimpleGraph::readFromContiguousFile(</span><span class="s5">const </span><span class="s1">std::string &amp;fileName) { 
+ 
+    std::string line</span><span class="s4">;</span><span class="s1"> 
+    std::ifstream graphFile { fileName }</span><span class="s4">;</span><span class="s1"> 
+ 
+    std::regex edgePat (</span><span class="s5">R</span><span class="s3">&quot;</span><span class="s4">(</span><span class="s3">(\d+)\s(\d+)\s(\d+)\s\.</span><span class="s4">)</span><span class="s3">&quot;</span><span class="s1">)</span><span class="s4">; </span><span class="s0">// subject predicate object .</span><span class="s1"> 
+    std::regex headerPat (</span><span class="s5">R</span><span class="s3">&quot;</span><span class="s4">(</span><span class="s3">(\d+),(\d+),(\d+)</span><span class="s4">)</span><span class="s3">&quot;</span><span class="s1">)</span><span class="s4">; </span><span class="s0">// noNodes,noEdges,noLabels</span><span class="s1"> 
+ 
+    </span><span class="s0">// parse the header (1st line)</span><span class="s1"> 
+    std::getline(graphFile</span><span class="s4">, </span><span class="s1">line)</span><span class="s4">;</span><span class="s1"> 
+    std::smatch matches</span><span class="s4">;</span><span class="s1"> 
+    </span><span class="s5">if</span><span class="s1">(std::regex_search(line</span><span class="s4">, </span><span class="s1">matches</span><span class="s4">, </span><span class="s1">headerPat)) { 
+        uint32_t noNodes = (uint32_t) std::stoul(matches[</span><span class="s6">1</span><span class="s1">])</span><span class="s4">;</span><span class="s1"> 
+        uint32_t noLabels = (uint32_t) std::stoul(matches[</span><span class="s6">3</span><span class="s1">])</span><span class="s4">;</span><span class="s1"> 
+ 
+        setNoVertices(noNodes)</span><span class="s4">;</span><span class="s1"> 
+        setNoLabels(noLabels)</span><span class="s4">;</span><span class="s1"> 
+    } </span><span class="s5">else </span><span class="s1">{ 
+        </span><span class="s5">throw </span><span class="s1">std::runtime_error(std::string(</span><span class="s3">&quot;Invalid graph header!&quot;</span><span class="s1">))</span><span class="s4">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s0">// parse edge data</span><span class="s1"> 
+    </span><span class="s5">while</span><span class="s1">(std::getline(graphFile</span><span class="s4">, </span><span class="s1">line)) { 
+ 
+        </span><span class="s5">if</span><span class="s1">(std::regex_search(line</span><span class="s4">, </span><span class="s1">matches</span><span class="s4">, </span><span class="s1">edgePat)) { 
+            uint32_t subject = (uint32_t) std::stoul(matches[</span><span class="s6">1</span><span class="s1">])</span><span class="s4">;</span><span class="s1"> 
+            uint32_t predicate = (uint32_t) std::stoul(matches[</span><span class="s6">2</span><span class="s1">])</span><span class="s4">;</span><span class="s1"> 
+            uint32_t object = (uint32_t) std::stoul(matches[</span><span class="s6">3</span><span class="s1">])</span><span class="s4">;</span><span class="s1"> 
+ 
+            addEdge(subject</span><span class="s4">, </span><span class="s1">object</span><span class="s4">, </span><span class="s1">predicate)</span><span class="s4">;</span><span class="s1"> 
+        } 
+    } 
+ 
+    graphFile.close()</span><span class="s4">;</span><span class="s1"> 
+ 
+}</span></pre>
+</body>
+</html>
